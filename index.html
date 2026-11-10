@@ -1,5 +1,456 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#071a36"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="成人牧區相機"><link rel="apple-touch-icon" href="icon-192.png"><link rel="manifest" href="manifest.json"><title>出發啦！成人牧區｜漫畫相機</title><style>
-*{box-sizing:border-box}body{margin:0;background:#071a36;color:white;font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif}button{font:inherit;cursor:pointer;touch-action:manipulation}#app{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px max(8px,env(safe-area-inset-right)) 8px max(8px,env(safe-area-inset-left));gap:8px}.stage{width:min(100%,calc((100dvh - 90px)*1.7768));aspect-ratio:1672/941;position:relative;overflow:hidden;background:#0b1726;border-radius:8px}.stage video,.stage #still,.stage .photoBg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.stage video.mirror{transform:scaleX(-1)}.stage #still{display:none}.stage #overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.stage .count{position:absolute;inset:0;display:grid;place-items:center;font-weight:900;font-size:clamp(55px,20vw,180px);text-shadow:0 5px 15px #000;pointer-events:none}.controls{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;width:100%}.controls button,.dialog button{background:#182d50;border:1px solid #6481ad;color:white;border-radius:12px;padding:9px 13px;min-height:44px}.controls button.primary{background:#fff;color:#10203d;border:4px solid #2881ef;border-radius:50%;height:62px;width:62px;font-size:26px;padding:0}.controls button:disabled{opacity:.4}.controls .active{background:#a46b00}#hint{font-size:12px;color:#c4d8fa;text-align:center;min-height:16px}.turn{display:none;position:fixed;inset:0;background:#071a36ed;z-index:20;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:22px}.dialog{position:fixed;inset:0;background:#000c;z-index:30;display:none;align-items:center;justify-content:center;padding:15px}.dialog.show{display:flex}.dialog .panel{max-width:450px;background:#132744;padding:20px;border-radius:16px;text-align:center}.dialog .panel button{margin:6px}#file{display:none}@media(orientation:portrait){.turn{display:flex}}@media(max-height:450px){#app{gap:3px}.controls button{min-height:38px;padding:6px 9px}.controls button.primary{height:48px;width:48px}}
-</style></head><body><div id="app"><div class="stage" id="stage"><video id="video" autoplay playsinline muted></video><img id="still" alt="拍攝相片"><img id="overlay" src="frame.png" alt="漫畫相框"><div class="count" id="count"></div></div><div class="controls"><button id="camera">開啟相機</button><button id="flip">切換鏡頭</button><button id="timer">倒數：關</button><button id="frameBtn" class="active">相框：開</button><button id="shot" class="primary" aria-label="拍照">●</button><button id="upload">相簿匯入</button><button id="save" disabled>儲存相片</button><button id="share" disabled>分享</button><button id="reset" disabled>重拍</button></div><div id="hint">請橫放手機，按「開啟相機」並允許使用鏡頭。</div><input id="file" type="file" accept="image/*"><div class="turn">請將手機橫向放置 ↻<br><small>橫向拍照效果最佳</small></div></div><div class="dialog" id="dialog"><div class="panel"><p id="message"></p><button id="close">關閉</button></div></div><script>
-(()=>{'use strict';const $=id=>document.getElementById(id);const video=$('video'),still=$('still'),overlay=$('overlay'),hint=$('hint');let stream=null,facing='environment',countdown=0,frameOn=true,photo=null,blob=null,objectUrl=null,sourceImage=null;const W=1672,H=941;const say=t=>hint.textContent=t;const alertUser=t=>{$('message').textContent=t;$('dialog').classList.add('show')};$('close').onclick=()=>$('dialog').classList.remove('show');function stop(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}async function start(){stop();clearPhoto();try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}}});video.srcObject=stream;video.classList.toggle('mirror',facing==='user');await video.play();say('鏡頭已啟動，可以拍照。')}catch(e){say('無法開啟相機。');alertUser('請在 HTTPS 網址（例如 GitHub Pages）使用，並允許瀏覽器存取相機。錯誤：'+e.message)}}function clearPhoto(){photo=null;sourceImage=null;blob=null;if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null}still.style.display='none';video.style.display='block';$('save').disabled=true;$('share').disabled=true;$('reset').disabled=true}function drawCover(ctx,img,w,h,mirror=false){const iw=img.videoWidth||img.naturalWidth,ih=img.videoHeight||img.naturalHeight;if(!iw||!ih)throw Error('未有可用影像');const r=Math.max(w/iw,h/ih),sw=w/r,sh=h/r,sx=(iw-sw)/2,sy=(ih-sh)/2;ctx.save();if(mirror){ctx.translate(w,0);ctx.scale(-1,1)}ctx.drawImage(img,sx,sy,sw,sh,0,0,w,h);ctx.restore()}function compose(img,mirror=false){const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);drawCover(ctx,img,W,H,mirror);if(frameOn)ctx.drawImage(overlay,0,0,W,H);return canvas}async function output(canvas){return new Promise((res,rej)=>canvas.toBlob(b=>b?res(b):rej(Error('相片輸出失敗')),'image/jpeg',.94))}async function capture(){if(!stream&&!sourceImage){alertUser('請先開啟相機，或者從相簿匯入照片。');return}if(!sourceImage&&video.readyState<2){say('相機準備中，請稍後重試');return}try{if(countdown){for(let n=countdown;n>0;n--){$('count').textContent=n;await new Promise(r=>setTimeout(r,1000))}$('count').textContent=''}const img=sourceImage||video;photo=compose(img,!sourceImage&&facing==='user');blob=await output(photo);still.src=photo.toDataURL('image/jpeg',.9);still.style.display='block';video.style.display='none';$('save').disabled=false;$('share').disabled=false;$('reset').disabled=false;say('已拍攝！可以儲存或分享。')}catch(e){$('count').textContent='';alertUser(e.message)}}$('camera').onclick=start;$('flip').onclick=async()=>{facing=facing==='user'?'environment':'user';await start()};$('timer').onclick=()=>{countdown=countdown===0?3:countdown===3?5:0;$('timer').textContent='倒數：'+(countdown?countdown+'秒':'關')};$('frameBtn').onclick=()=>{frameOn=!frameOn;overlay.style.display=frameOn?'block':'none';$('frameBtn').textContent='相框：'+(frameOn?'開':'關');$('frameBtn').classList.toggle('active',frameOn);if(photo){const img=sourceImage||video;if(img===video&&video.style.display==='none'){say('更換相框後請按「重拍」再拍攝。')}else{photo=compose(img,!sourceImage&&facing==='user');output(photo).then(b=>{blob=b;still.src=photo.toDataURL('image/jpeg',.9)})}}};$('shot').onclick=capture;$('reset').onclick=()=>{clearPhoto();say('可以重新拍攝。')};$('upload').onclick=()=>$('file').click();$('file').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;clearPhoto();const url=URL.createObjectURL(f);objectUrl=url;const img=new Image();img.onload=async()=>{sourceImage=img;photo=compose(img);blob=await output(photo);still.src=photo.toDataURL('image/jpeg',.9);still.style.display='block';video.style.display='none';$('save').disabled=false;$('share').disabled=false;$('reset').disabled=false;say('相簿照片已加入漫畫相框。')};img.onerror=()=>alertUser('無法讀取照片');img.src=url;e.target.value=''};function filename(){return '出發啦-成人牧區-'+new Date().toISOString().replace(/[:.]/g,'-')+'.jpg'}$('save').onclick=()=>{if(!blob)return;const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=filename();document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),30000);say('已啟動下載；iPhone 可透過分享功能儲存到相片。')};$('share').onclick=async()=>{if(!blob)return;const f=new File([blob],filename(),{type:'image/jpeg'});try{if(navigator.canShare?.({files:[f]}))await navigator.share({files:[f],title:'出發啦！成人牧區'});else if(navigator.share)await navigator.share({title:'出發啦！成人牧區'});else alertUser('此瀏覽器不支援直接分享，請先儲存相片。')}catch(e){if(e.name!=='AbortError')alertUser('分享失敗：'+e.message)}};if('serviceWorker'in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});window.addEventListener('pagehide',stop);})();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Team 1 - 野外定向探索</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Fonts & Styles -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800&display=swap');
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      background-color: #f4f8f6;
+    }
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease-in-out, opacity 0.25s ease-in-out;
+      opacity: 0;
+    }
+    .accordion-content.active {
+      max-height: 1000px;
+      opacity: 1;
+    }
+  </style>
+</head>
+<body class="text-slate-800 pb-12">
+
+  <!-- Sticky Header Bar -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-emerald-100 shadow-sm">
+    <div class="max-w-md mx-auto px-5 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-200">
+          <i class="fa-solid fa-compass text-xl"></i>
+        </div>
+        <div>
+          <!-- Requested Header: Team 1 -->
+          <h1 class="text-xl font-extrabold text-slate-900 tracking-wide">Team 1</h1>
+        </div>
+      </div>
+      
+      <!-- Reset Progress Button -->
+      <button onclick="confirmReset()" class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-1.5 text-xs font-semibold">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span>重設</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-md mx-auto px-4 pt-4 space-y-4">
+
+    <!-- Progress Card -->
+    <div class="bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 rounded-2xl p-4 text-white shadow-lg shadow-emerald-900/10 relative overflow-hidden">
+      <div class="absolute -right-4 -bottom-4 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+      
+      <div class="flex items-center justify-between mb-2 relative z-10">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-trophy text-amber-300 text-sm"></i>
+          <span class="font-bold text-sm text-emerald-50">探索進度</span>
+        </div>
+        <span id="progressText" class="text-xs font-extrabold bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+          已完成 0 / 5
+        </span>
+      </div>
+
+      <!-- Dynamic Progress Bar -->
+      <div class="w-full bg-black/20 h-3.5 rounded-full overflow-hidden p-0.5 relative z-10">
+        <div id="progressBar" class="bg-gradient-to-r from-amber-300 to-emerald-300 h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+      </div>
+
+      <div class="mt-2.5 text-right relative z-10">
+        <span id="statusSubtext" class="text-xs text-emerald-100 font-medium">
+          還剩 5 個目標，點擊題目開啟探險！
+        </span>
+      </div>
+    </div>
+
+    <!-- Target Cards Accordion List -->
+    <div id="targetsContainer" class="space-y-3">
+      <!-- Generated dynamically by JavaScript -->
+    </div>
+
+  </main>
+
+  <!-- Celebration Modal (Shown when all 5 are completed) -->
+  <div id="celebrateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl relative overflow-hidden">
+      <div class="w-16 h-16 bg-gradient-to-tr from-emerald-500 to-amber-300 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-200 text-white text-3xl">
+        <i class="fa-solid fa-award"></i>
+      </div>
+
+      <div>
+        <h2 class="text-xl font-extrabold text-slate-800">🎉 恭喜 Team 1！完成任務！</h2>
+        <p class="text-xs text-slate-500 mt-1">組別已順利探索完成全部 5 個目標！</p>
+      </div>
+
+      <div class="bg-emerald-50 rounded-2xl p-3 border border-emerald-100 text-left text-xs text-emerald-800 space-y-1">
+        <p class="font-bold flex items-center gap-1">
+          <i class="fa-solid fa-sparkles text-emerald-600"></i> 打卡成功提示：
+        </p>
+        <p class="text-slate-600">請向組長或負責人展示此畫面與相片打卡紀錄！</p>
+      </div>
+
+      <button onclick="closeModal('celebrateModal')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all active:scale-95">
+        返回探索紀錄
+      </button>
+    </div>
+  </div>
+
+  <!-- Reset Confirmation Modal -->
+  <div id="resetModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-2xl max-w-xs w-full p-5 space-y-3 shadow-xl">
+      <h3 class="font-bold text-slate-800 text-base">確認重設進度？</h3>
+      <p class="text-xs text-slate-500 leading-relaxed">
+        確定要清除 Team 1 的所有完成紀錄與打卡照片嗎？
+      </p>
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeModal('resetModal')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors">
+          取消
+        </button>
+        <button onclick="executeReset()" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-md shadow-rose-600/20 transition-colors">
+          確定重設
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="max-w-md mx-auto text-center mt-8 px-4 text-xs text-slate-400 space-y-1">
+    <p class="font-semibold text-slate-500">Team 1 野外定向探索 Game</p>
+    <p>祝各組發揮團隊精神，順利完賽！</p>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    // Initial Target Puzzles Data
+    const INITIAL_TARGETS = [
+      {
+        id: 1,
+        number: "1",
+        title: "目標一",
+        description: "走進 Centre Street，尋找一座建於 1911 年、名為 Canton Block 的百年歷史磚樓。在 20 世紀初，這裡曾是孫中山先生的思想追隨者在卡加利設立的海外政治與僑務大本營，樓上設有華文學校與社交會所，見證了早期華僑捐款救國與維護權益的歷史。",
+        isCompleted: false,
+        photo: null,
+        photoTimestamp: null
+      },
+      {
+        id: 2,
+        number: "2",
+        title: "目標二",
+        description: "於 1968 年落成時（原名 Husky Tower），曾是多倫多以外加拿大最高的建築物，也是當時北美同類型獨立觀景塔中的最高紀錄保持者。紀念 1988 年冬季奧運會的重要場地，也凝聚了多位現代政治與社區領袖的足跡。\n\n• 歷史人物連結：廣場開幕時由時任市長拉爾夫·克萊恩（Ralph Klein）（後來成為亞伯達省省長）主持。他在任內大力推動市中心的發展與轉型，對現代卡加利的面貌影響深遠。\n\n• 特色與重點：廣場地面保留了當年冬奧運動員與無數市民的紀念磚牆，見證了卡加利躍升為國際城市的歷史時刻。",
+        isCompleted: false,
+        photo: null,
+        photoTimestamp: null
+      },
+      {
+        id: 3,
+        number: "3",
+        title: "目標三",
+        description: "由國際知名事務所 Snøhetta 設計，外形如舟艇，採用木質雙曲面中庭與幾何玻璃外牆，被 TIME 雜誌選為全球最佳景點之一。",
+        isCompleted: false,
+        photo: null,
+        photoTimestamp: null
+      },
+      {
+        id: 4,
+        number: "4",
+        title: "目標四",
+        description: "由 9 座覆蓋著陶瓷瓦片的弧形塔樓連接而成，靈感源自樂器聲學與加拿大峽谷地形，內部展出大量加拿大音樂歷史珍藏。",
+        isCompleted: false,
+        photo: null,
+        photoTimestamp: null
+      },
+      {
+        id: 5,
+        number: "5",
+        title: "目標五",
+        description: "跨越弓河的標誌性紅白色步行橋，由西班牙大師 Santiago Calatrava 設計，採用螺旋鋼管結構；連接河畔步道與綠化公園，是市民休閒與欣賞城市天際線的絕佳地點。",
+        isCompleted: false,
+        photo: null,
+        photoTimestamp: null
+      }
+    ];
+
+    // Local Storage Key specific to Team 1
+    const STORAGE_KEY = 'orienteering_team1_data';
+    let targets = [];
+    let expandedId = 1; // Default open first card
+
+    // Initialize application state
+    function init() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          targets = JSON.parse(saved);
+        } catch (e) {
+          targets = [...INITIAL_TARGETS];
+        }
+      } else {
+        targets = [...INITIAL_TARGETS];
+      }
+      render();
+    }
+
+    // Save to Local Storage
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(targets));
+      renderProgress();
+    }
+
+    // Render the entire list
+    function render() {
+      const container = document.getElementById('targetsContainer');
+      container.innerHTML = '';
+
+      targets.forEach(target => {
+        const isExpanded = expandedId === target.id;
+        
+        const card = document.createElement('div');
+        card.className = `bg-white rounded-2xl border transition-all duration-300 overflow-hidden shadow-sm ${
+          target.isCompleted ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200/80 hover:border-slate-300'
+        }`;
+
+        card.innerHTML = `
+          <!-- Accordion Header -->
+          <div onclick="toggleAccordion(${target.id})" class="p-4 flex items-center justify-between cursor-pointer select-none active:bg-slate-50 transition-colors">
+            <div class="flex items-center gap-3.5 min-w-0 pr-2">
+              
+              <!-- Voting Style Large Circle Number -->
+              <button onclick="toggleComplete(${target.id}, event)" class="flex-shrink-0 focus:outline-none group" title="切換完成狀態">
+                <div class="w-11 h-11 rounded-full flex items-center justify-center font-extrabold text-lg border-2 transition-all duration-300 shadow-sm ${
+                  target.isCompleted 
+                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-emerald-200' 
+                    : 'bg-slate-50 border-emerald-600 text-emerald-800 group-hover:bg-emerald-50'
+                }">
+                  ${target.isCompleted ? '<i class="fa-solid fa-check text-xl"></i>' : target.number}
+                </div>
+              </button>
+
+              <!-- Target Title -->
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-extrabold text-lg leading-snug ${target.isCompleted ? 'text-emerald-950 line-through opacity-80' : 'text-slate-800'}">
+                    ${target.title}
+                  </h3>
+                  ${target.photo ? `
+                    <span class="flex items-center gap-1 text-[10px] text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full font-bold border border-sky-100">
+                      <i class="fa-solid fa-camera"></i> 已打卡
+                    </span>
+                  ` : ''}
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">按下以展開題目與相片打卡</p>
+              </div>
+            </div>
+
+            <!-- Dropdown Arrow Icon -->
+            <div class="p-2 rounded-full text-slate-400 transition-transform duration-300 flex-shrink-0 ${isExpanded ? 'rotate-180 bg-slate-100 text-slate-600' : ''}">
+              <i class="fa-solid fa-chevron-down"></i>
+            </div>
+          </div>
+
+          <!-- Accordion Content -->
+          <div class="accordion-content ${isExpanded ? 'active' : ''}">
+            <div class="px-4 pb-4 pt-1 border-t border-slate-100 bg-white space-y-4">
+              
+              <!-- Puzzle Details -->
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2 mt-2">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-700">
+                  <i class="fa-solid fa-book-open"></i>
+                  <span>題目內容</span>
+                </div>
+                <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-line font-normal">
+                  ${target.description}
+                </p>
+              </div>
+
+              <!-- Uploaded Photo Preview -->
+              ${target.photo ? `
+                <div class="relative rounded-xl overflow-hidden border border-emerald-200 bg-slate-900 shadow-inner group">
+                  <img src="${target.photo}" alt="${target.title}" class="w-full h-52 object-cover">
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 p-3 flex flex-col justify-between">
+                    <div class="flex justify-between items-center">
+                      <span class="text-[10px] bg-black/60 text-emerald-300 font-mono px-2.5 py-1 rounded-full backdrop-blur-md">
+                        ${target.photoTimestamp}
+                      </span>
+                      <button onclick="removePhoto(${target.id}, event)" class="p-1.5 bg-rose-600/80 hover:bg-rose-600 text-white rounded-lg backdrop-blur-md transition-colors" title="刪除相片">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </button>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-white">
+                      <span class="text-xs font-bold flex items-center gap-1.5 text-emerald-300">
+                        <i class="fa-solid fa-circle-check"></i> 相片打卡成功
+                      </span>
+                      <a href="${target.photo}" download="Team1-target-${target.id}.jpg" class="p-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg backdrop-blur-md transition-colors flex items-center gap-1 text-xs font-semibold">
+                        <i class="fa-solid fa-download"></i> 下載
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Action Buttons -->
+              <div class="flex items-center gap-2 pt-1">
+                <!-- Toggle Complete Button -->
+                <button onclick="toggleComplete(${target.id}, event)" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 ${
+                  target.isCompleted
+                    ? 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/20'
+                }">
+                  <i class="fa-solid ${target.isCompleted ? 'fa-rotate-left' : 'fa-circle-check'}"></i>
+                  <span>${target.isCompleted ? '標記為未完成' : '標記完成'}</span>
+                </button>
+
+                <!-- Camera Action Button -->
+                <label class="flex-1 cursor-pointer">
+                  <input type="file" accept="image/*" capture="environment" onchange="handlePhotoUpload(${target.id}, event)" class="hidden">
+                  <div class="py-2.5 px-3 rounded-xl text-xs font-bold bg-sky-500 hover:bg-sky-600 text-white shadow-md shadow-sky-500/20 flex items-center justify-center gap-1.5 transition-all active:scale-95">
+                    <i class="fa-solid fa-camera"></i>
+                    <span>${target.photo ? '重新影相打卡' : '影相打卡'}</span>
+                  </div>
+                </label>
+              </div>
+
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      renderProgress();
+    }
+
+    // Toggle Accordion Panel
+    function toggleAccordion(id) {
+      expandedId = expandedId === id ? null : id;
+      render();
+    }
+
+    // Toggle Task Completion State
+    function toggleComplete(id, event) {
+      if(event) event.stopPropagation();
+      targets = targets.map(t => {
+        if (t.id === id) {
+          return { ...t, isCompleted: !t.isCompleted };
+        }
+        return t;
+      });
+      saveData();
+      render();
+      checkAllCompleted();
+    }
+
+    // Handle Mobile Photo Upload/Camera
+    function handlePhotoUpload(id, event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const photoUrl = e.target.result;
+          const timestamp = new Date().toLocaleString('zh-HK', { 
+            month: 'short', 
+            day: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+
+          targets = targets.map(t => {
+            if (t.id === id) {
+              return {
+                ...t,
+                photo: photoUrl,
+                photoTimestamp: timestamp,
+                isCompleted: true // Automatically mark complete on photo take
+              };
+            }
+            return t;
+          });
+
+          saveData();
+          render();
+          checkAllCompleted();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Remove photo
+    function removePhoto(id, event) {
+      if(event) event.stopPropagation();
+      targets = targets.map(t => {
+        if (t.id === id) {
+          return { ...t, photo: null, photoTimestamp: null };
+        }
+        return t;
+      });
+      saveData();
+      render();
+    }
+
+    // Render Progress Bar & Subtext
+    function renderProgress() {
+      const completedCount = targets.filter(t => t.isCompleted).length;
+      const total = targets.length;
+      const percent = Math.round((completedCount / total) * 100);
+
+      document.getElementById('progressText').innerText = `已完成 ${completedCount} / ${total}`;
+      document.getElementById('progressBar').style.width = `${percent}%`;
+      
+      const subtext = document.getElementById('statusSubtext');
+      if (completedCount === total) {
+        subtext.innerText = '🎉 恭喜 Team 1！全部目標已成功探索完畢！';
+      } else {
+        subtext.innerText = `還剩 ${total - completedCount} 個目標，繼續加油！`;
+      }
+    }
+
+    // Check if all tasks are finished to show modal
+    function checkAllCompleted() {
+      const completedCount = targets.filter(t => t.isCompleted).length;
+      if (completedCount === targets.length && targets.length > 0) {
+        document.getElementById('celebrateModal').classList.remove('hidden');
+      }
+    }
+
+    // Modal Handlers
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    function confirmReset() {
+      document.getElementById('resetModal').classList.remove('hidden');
+    }
+
+    function executeReset() {
+      targets = [...INITIAL_TARGETS];
+      expandedId = 1;
+      saveData();
+      render();
+      closeModal('resetModal');
+    }
+
+    // Initialize on DOM Ready
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
