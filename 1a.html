@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f8f2">
+<title>TEAM 1｜成人牧區野外定向</title>
+<style>
+:root{color-scheme:light;--ink:#15372f;--muted:#4f6b60;--green:#116448;--line:#d9e6db;--paper:#f4f8f2;--white:#fff;--mint:#e5f3e9}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"PingFang HK","Noto Sans CJK TC",sans-serif}
+button,a,input{-webkit-tap-highlight-color:transparent}
+button{font:inherit;cursor:pointer;color:inherit}
+button:focus-visible,a:focus-visible{outline:3px solid #137a61;outline-offset:3px}
+button:disabled{opacity:.58;cursor:wait}
+[hidden]{display:none!important}
+.shell{max-width:660px;margin:auto;padding:calc(15px + env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) calc(25px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+.brand{display:flex;align-items:center;gap:9px;font-size:.84rem;letter-spacing:.12em;font-weight:750;margin:0 2px 13px}
+.brand .icon{background:#dceee2;border-radius:10px;padding:6px;width:32px;height:32px;color:var(--green)}
+.icon{display:block;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hero{position:relative;isolation:isolate;overflow:hidden;background:#dff1e4;border:1px solid #c8e2d1;border-radius:23px;padding:20px 17px 17px}
+.hero-map{position:absolute;right:-14px;top:-19px;width:52%;max-width:275px;height:160px;z-index:-1;color:#6da98d;opacity:.65;pointer-events:none}
+.kicker{color:#275b49;font-size:.68rem;font-weight:800;letter-spacing:.17em}
+h1{font-size:clamp(2.35rem,10vw,3.4rem);letter-spacing:-.045em;line-height:1;margin:6px 0}
+.hero p{margin:6px 0 14px;font-weight:720;font-size:.94rem}
+.progress{display:flex;align-items:center;gap:9px;background:#f7fcf8;border-radius:12px;padding:9px 10px;font-size:.78rem;font-weight:740}
+progress{flex:1;min-width:20px;height:7px;border:0;border-radius:10px;background:#dcebe0;overflow:hidden;color:var(--green)}
+progress::-webkit-progress-bar{background:#dcebe0;border-radius:10px}
+progress::-webkit-progress-value{background:var(--green);border-radius:10px}
+progress::-moz-progress-bar{background:var(--green);border-radius:10px}
+.guide{margin:15px 2px 12px;color:var(--muted);font-size:.83rem;line-height:1.6}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:0 2px 8px;gap:8px}
+h2{margin:0;font-size:1.12rem}
+.photo-count{font-size:.75rem;color:var(--muted);font-weight:650}
+.list{display:grid;gap:8px}
+.card{min-width:0;border:1px solid var(--line);border-radius:15px;background:var(--white);box-shadow:0 2px 5px #14382b08}
+.card.done{border-color:#a9d4b7}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 48px 52px;align-items:center;gap:6px;padding:6px}
+.row button{border:0;border-radius:10px;min-height:49px;background:transparent}
+.row .toggle{display:flex;align-items:center;gap:9px;padding:4px 5px;text-align:left;width:100%;font-weight:750}
+.number{display:grid;place-items:center;min-width:34px;height:34px;border-radius:9px;background:var(--mint);color:var(--green);font-size:.8rem;font-weight:850;font-variant-numeric:tabular-nums}
+.row-title{flex:1;min-width:0;font-size:.92rem}
+.chevron{width:15px;height:15px;flex:none;color:var(--muted)}
+.toggle[aria-expanded=true] .chevron{transform:rotate(180deg)}
+.row .action{display:grid;justify-items:center;align-content:center;gap:2px;padding:3px 1px;background:#f1f5f1;color:#36594a;font-size:.64rem;font-weight:730;white-space:nowrap}
+.row .action .icon{width:19px;height:19px}
+.row .camera{background:#e6f3ee;color:#155e47}
+.row .action[aria-pressed=true],.row .camera.has-photo{background:var(--green);color:#fff}
+.panel{border-top:1px solid var(--line);margin:0 11px;padding:12px 2px 13px;font-size:.94rem;line-height:1.72;overflow-wrap:anywhere}
+.panel p{margin:0 0 8px}
+.panel .note{background:#fff3d5;color:#624713;padding:8px 10px;border-radius:9px;font-size:.83rem}
+.panel .task{color:var(--green);font-weight:700;font-size:.85rem}
+.preview{display:block;width:100%;max-height:310px;object-fit:contain;background:#eaf1ec;border-radius:10px;margin:9px 0 7px}
+.photo-tools{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.photo-tools button,.photo-tools a{display:inline-flex;align-items:center;min-height:44px;padding:5px 10px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--green);font-size:.8rem;font-weight:700;text-decoration:none}
+.status{margin:0;color:var(--muted);font-size:.8rem}
+.banner{margin:12px 0 0;background:#e4f3e8;border:1px solid #b4dbc1;border-radius:12px;padding:11px 12px;font-weight:700;font-size:.9rem}
+footer{margin:15px 2px 0;color:var(--muted);font-size:.75rem;line-height:1.65}
+footer p{margin:4px 0}
+@media(min-width:450px){.row{grid-template-columns:minmax(0,1fr) 58px 62px;gap:8px}.hero{padding-inline:21px}.panel{padding-inline:7px}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute">
+  <symbol id="compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.7 8.3-2 5.4-5.4 2 2-5.4z"/></symbol>
+  <symbol id="chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="camera" viewBox="0 0 24 24"><path d="M4 6.5h3.8L9.4 4h5.2l1.6 2.5H20a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="3.4"/></symbol>
+</svg>
+<main class="shell">
+  <header>
+    <p class="brand"><svg class="icon" aria-hidden="true"><use href="#compass"/></svg>成人牧區 · 野外定向</p>
+    <div class="hero">
+      <svg class="hero-map" viewBox="0 0 240 150" fill="none" aria-hidden="true">
+        <g stroke="currentColor" opacity=".43"><path d="M12 12c62 26 17 65 83 58s58-69 132-41M6 26c61 29 21 66 93 57s65-69 140-38M7 41c51 29 25 63 92 54s72-67 141-37M12 57c39 30 28 62 89 50s73-61 139-36M24 75c28 28 31 57 81 43s75-56 136-36M29 92c23 25 42 52 83 38s78-51 128-39"/></g>
+        <path d="M49 109c24-4 32-34 56-34s31 13 52 2 13-38 36-42" stroke="currentColor" stroke-width="2.3" stroke-dasharray="4 5" stroke-linecap="round"/>
+        <circle cx="49" cy="109" r="4" fill="#458467"/><circle cx="193" cy="35" r="7" fill="#f5d37a" stroke="#458467" stroke-width="2"/>
+      </svg>
+      <div class="kicker">CALGARY FIELD QUEST</div>
+      <h1 id="team">TEAM 1</h1>
+      <p>卡加利市中心探索</p>
+      <div class="progress"><span>探索進度</span><progress id="progress" value="0" aria-label="探索進度"></progress><span id="progress-count" role="status"></span></div>
+    </div>
+  </header>
+  <p class="guide">點目標展開線索。到達後可拍照打卡，再按剔號標記完成。</p>
+  <section aria-labelledby="section-title">
+    <div class="section-head"><h2 id="section-title">探索目標</h2><span id="photo-count" class="photo-count"></span></div>
+    <div id="targets" class="list"></div>
+    <p id="finished" class="banner" hidden>全部目標已完成！可向活動負責人展示進度同打卡相片。</p>
+  </section>
+  <footer><p>進度及相片只會儲存在此裝置的同一個瀏覽器。</p><p id="storage-status" role="status"></p></footer>
+</main>
+<template id="card">
+  <article class="card">
+    <div class="row">
+      <button class="toggle" type="button" aria-expanded="false"><span class="number" aria-hidden="true"></span><span class="row-title"></span><svg class="icon chevron" aria-hidden="true"><use href="#chevron"/></svg></button>
+      <button class="action check" type="button" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#check"/></svg><span>完成</span></button>
+      <button class="action camera" type="button"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg><span>相機</span></button>
+    </div>
+    <input class="capture" type="file" accept="image/*" capture="environment" hidden>
+    <input class="album" type="file" accept="image/*" hidden>
+    <div class="panel" hidden>
+      <div class="clue"></div>
+      <p class="note" hidden></p>
+      <p class="task"></p>
+      <img class="preview" alt="" hidden>
+      <p class="status" role="status"></p>
+      <div class="photo-tools"><button class="pick" type="button">從相簿選擇</button><a class="download" hidden>下載相片</a></div>
+    </div>
+  </article>
+</template>
+<script>
+'use strict';
+
+// 複製給其他隊伍時，只需改這段。teamId 每隊不同；陣列排列就是顯示次序。
+// 保留每個地點的 id，日後調換同一隊的次序時，原有相片及進度仍會對應正確。
+const GAME = {
+  teamName: 'TEAM 1',
+  teamId: 'team-1',
+  targets: [
+    {
+      id: 'canton-block',
+      clue: ['走進 Centre Street，尋找一座於 1910 至 1911 年興建、名為 Canton Block 的百年紅磚樓。早期華商在這裏購地興建大樓，為今日卡加利唐人街奠下基礎。'],
+      task: '在行人路拍下大樓的紅磚外牆。'
+    },
+    {
+      id: 'olympic-plaza',
+      clue: ['找出 1988 年卡加利冬季奧運會的頒獎廣場。當年，市民可認購刻上自己名字的紀念磚，成為廣場步道的一部分。', '時任市長拉爾夫·克萊恩（Ralph Klein）希望市民也能親身觀看頒獎，因此推動在市中心廣場舉行頒獎典禮。'],
+      note: '廣場現正施工。可在附近開放的公共行人路打卡，請留在圍欄外。',
+      task: '在開放的行人路拍下廣場外圍或附近的街道路牌。'
+    },
+    {
+      id: 'central-library',
+      clue: ['找出這座由 Snøhetta 與 DIALOG 合作設計的建築。外形如舟艇，有木質拱形入口和幾何玻璃外牆，曾獲 TIME 雜誌選為 2019 年全球最佳景點之一。'],
+      task: '在外面拍下木質拱形入口或幾何玻璃外牆。'
+    },
+    {
+      id: 'studio-bell',
+      clue: ['哪一座建築由 9 座覆蓋陶瓷瓦片的弧形塔樓互相連接？設計靈感來自樂器的聲學結構，內部收藏大量加拿大音樂歷史珍品。'],
+      task: '在街上拍下弧形塔樓或陶瓷外牆。'
+    },
+    {
+      id: 'husky-tower',
+      clue: ['尋找一座於 1968 年落成、原名 Husky Tower 的觀景塔。1988 年卡加利冬奧期間，塔頂曾燃點官方奧運聖火。'],
+      task: '在公共行人路拍一張見到塔頂的相片。'
+    }
+  ]
+};
+
+const byId = id => document.getElementById(id);
+const records = new Map();
+const cards = new Map();
+const progress = byId('progress');
+let database;
+
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('pastoral-orienteering', 1);
+    request.onupgradeneeded = () => request.result.createObjectStore('targets');
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+    request.onblocked = () => reject(new Error('Database blocked'));
+  });
+}
+
+function storage(mode, action) {
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction('targets', mode);
+    const request = action(transaction.objectStore('targets'));
+    transaction.oncomplete = () => resolve(request.result);
+    transaction.onabort = () => reject(transaction.error);
+  });
+}
+
+const key = id => GAME.teamId + '/' + id;
+
+function updateProgress() {
+  const values = [...records.values()];
+  const completed = values.filter(record => record.done).length;
+  const photos = values.filter(record => record.photo).length;
+  progress.value = completed;
+  byId('progress-count').textContent = completed + ' / ' + GAME.targets.length;
+  byId('photo-count').textContent = '已拍照 ' + photos + ' / ' + GAME.targets.length;
+  byId('finished').hidden = completed !== GAME.targets.length;
+}
+
+function expand(id) {
+  for (const [targetId, ui] of cards) {
+    const open = targetId === id;
+    ui.toggle.setAttribute('aria-expanded', String(open));
+    ui.panel.hidden = !open;
+  }
+}
+
+function renderCard(id) {
+  const record = records.get(id);
+  const ui = cards.get(id);
+  ui.card.classList.toggle('done', !!record.done);
+  ui.check.setAttribute('aria-pressed', String(!!record.done));
+  ui.check.querySelector('span').textContent = record.done ? '已完成' : '完成';
+  ui.camera.classList.toggle('has-photo', !!record.photo);
+  ui.camera.querySelector('span').textContent = record.photo ? '重拍' : '相機';
+  ui.camera.setAttribute('aria-label', ui.title + (record.photo ? '重拍相片' : '相機打卡'));
+  if (!record.photo || ui.currentPhoto === record.photo) return;
+
+  if (ui.photoUrl) URL.revokeObjectURL(ui.photoUrl);
+  ui.currentPhoto = record.photo;
+  ui.photoUrl = URL.createObjectURL(record.photo);
+  ui.preview.src = ui.photoUrl;
+  ui.preview.hidden = false;
+  ui.download.href = ui.photoUrl;
+  const extension = (record.fileName || '').match(/\.[a-z0-9]{2,8}$/i)?.[0] || '';
+  ui.download.download = GAME.teamId + '-' + id + extension;
+  ui.download.hidden = false;
+  ui.status.textContent = '已打卡 · ' + new Date(record.takenAt).toLocaleString('zh-HK');
+}
+
+async function save(id, changes) {
+  const ui = cards.get(id);
+  if (ui.check.disabled) return;
+  for (const button of [ui.check, ui.camera, ui.pick]) button.disabled = true;
+  const next = {...records.get(id), ...changes};
+  const savingMessage = ui.status.textContent;
+  try {
+    if (database) await storage('readwrite', store => store.put(next, key(id)));
+    records.set(id, next);
+    renderCard(id);
+    updateProgress();
+    if (!changes.photo && ui.status.textContent === savingMessage && savingMessage.includes('未能儲存')) {
+      ui.status.textContent = '';
+    }
+  } catch (error) {
+    expand(id);
+    ui.status.textContent = '未能儲存，請確認瀏覽器有足夠空間後重試。';
+  } finally {
+    for (const button of [ui.check, ui.camera, ui.pick]) button.disabled = false;
+  }
+}
+
+function attachPhoto(id, input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  expand(id);
+  if (!file.type.startsWith('image/') && !/\.(heic|heif|avif|jpe?g|png|webp|gif)$/i.test(file.name)) {
+    cards.get(id).status.textContent = '請選擇圖片檔案。';
+    return;
+  }
+  save(id, {photo:file, fileName:file.name, takenAt:Date.now()});
+}
+
+function makeCard(target, index) {
+  const card = byId('card').content.firstElementChild.cloneNode(true);
+  const ui = {card, title:'目標 ' + (index + 1)};
+  for (const name of ['toggle','check','camera','panel','preview','download','status','pick','capture','album']) {
+    ui[name] = card.querySelector('.' + name);
+  }
+  cards.set(target.id, ui);
+  card.querySelector('.number').textContent = String(index + 1).padStart(2, '0');
+  card.querySelector('.row-title').textContent = ui.title;
+  ui.panel.id = 'clue-' + target.id;
+  ui.toggle.setAttribute('aria-controls', ui.panel.id);
+  ui.check.setAttribute('aria-label', ui.title + '完成');
+  ui.preview.alt = ui.title + '打卡相片';
+  ui.preview.addEventListener('error', () => {
+    ui.status.textContent = '此瀏覽器未能預覽相片格式，仍可下載原檔。';
+  });
+
+  for (const line of target.clue) {
+    const paragraph = document.createElement('p');
+    paragraph.textContent = line;
+    card.querySelector('.clue').append(paragraph);
+  }
+  if (target.note) {
+    const note = card.querySelector('.note');
+    note.textContent = target.note;
+    note.hidden = false;
+  }
+  card.querySelector('.task').textContent = '打卡方式　' + target.task;
+  ui.toggle.addEventListener('click', () => expand(ui.panel.hidden ? target.id : null));
+  ui.check.addEventListener('click', () => save(target.id, {done:!records.get(target.id).done}));
+  ui.camera.addEventListener('click', () => ui.capture.click());
+  ui.pick.addEventListener('click', () => ui.album.click());
+  for (const input of [ui.capture, ui.album]) input.addEventListener('change', () => attachPhoto(target.id, input));
+
+  byId('targets').append(card);
+  renderCard(target.id);
+}
+
+async function init() {
+  byId('team').textContent = GAME.teamName;
+  document.title = GAME.teamName + '｜成人牧區野外定向';
+  progress.max = GAME.targets.length;
+  try {
+    database = await openDatabase();
+    const saved = await Promise.all(GAME.targets.map(target => storage('readonly', store => store.get(key(target.id)))));
+    GAME.targets.forEach((target, index) => records.set(target.id, saved[index] || {}));
+  } catch (error) {
+    database?.close();
+    database = undefined;
+    byId('storage-status').textContent = '瀏覽器暫未能儲存資料。關閉或重新整理頁面前，請先下載打卡相片。';
+  }
+  GAME.targets.forEach((target, index) => {
+    if (!records.has(target.id)) records.set(target.id, {});
+    makeCard(target, index);
+  });
+  updateProgress();
+}
+init();
+</script>
+</body>
+</html>
