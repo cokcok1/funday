@@ -53,6 +53,7 @@ h2{margin:0;font-size:1.12rem}
 .preview{display:block;width:100%;max-height:310px;object-fit:contain;background:#eaf1ec;border-radius:10px;margin:9px 0 7px}
 .photo-tools{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
 .photo-tools button,.photo-tools a{display:inline-flex;align-items:center;min-height:44px;padding:5px 10px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--green);font-size:.8rem;font-weight:700;text-decoration:none}
+.photo-tools .upload{background:var(--green);color:white;border-color:var(--green)}
 .status{margin:0;color:var(--muted);font-size:.8rem}
 .banner{margin:12px 0 0;background:#e4f3e8;border:1px solid #b4dbc1;border-radius:12px;padding:11px 12px;font-weight:700;font-size:.9rem}
 footer{margin:15px 2px 0;color:var(--muted);font-size:.75rem;line-height:1.65}
@@ -88,7 +89,7 @@ footer p{margin:4px 0}
     <div id="targets" class="list"></div>
     <p id="finished" class="banner" hidden>全部目標已完成！可向活動負責人展示進度同打卡相片。</p>
   </section>
-  <footer><p>進度及相片只會儲存在此裝置的同一個瀏覽器。</p><p id="storage-status" role="status"></p></footer>
+  <footer><p>進度與打卡相片會保留在此瀏覽器。按上傳才會將相片送到 Dropbox。</p><p><a id="dropbox-request" target="_blank" rel="noopener noreferrer" hidden>開啟 Dropbox T1 收相頁</a></p><p id="storage-status" role="status"></p></footer>
 </main>
 <template id="card">
   <article class="card">
@@ -105,7 +106,8 @@ footer p{margin:4px 0}
       <p class="task"></p>
       <img class="preview" alt="" hidden>
       <p class="status" role="status"></p>
-      <div class="photo-tools"><button class="pick" type="button">從相簿選擇</button><a class="download" hidden>下載相片</a></div>
+      <p class="upload-status status" role="status"></p>
+      <div class="photo-tools"><button class="upload" type="button" hidden>上傳到 Dropbox</button><button class="pick" type="button">從相簿選擇</button><a class="download" hidden>下載相片</a></div>
     </div>
   </article>
 </template>
@@ -117,6 +119,9 @@ footer p{margin:4px 0}
 const GAME = {
   teamName: 'TEAM 1',
   teamId: 'team-1',
+  dropboxRequest: 'https://www.dropbox.com/request/i71zxf2l6nb0kwo8plc8',
+  // 部署 Worker 後填入完整 HTTPS /upload 網址。
+  uploadEndpoint: '',
   targets: [
     {
       id: 'canton-block',
@@ -201,10 +206,16 @@ function renderCard(id) {
   ui.camera.classList.toggle('has-photo', !!record.photo);
   ui.camera.querySelector('span').textContent = record.photo ? '重拍' : '相機';
   ui.camera.setAttribute('aria-label', ui.title + (record.photo ? '重拍相片' : '相機打卡'));
+  ui.upload.hidden = !record.photo;
+  ui.upload.disabled = ui.uploading || !!(GAME.uploadEndpoint && record.uploaded);
+  ui.upload.textContent = !GAME.uploadEndpoint ? '開啟 Dropbox 收相頁' :
+    record.uploaded ? '已上傳到 Dropbox' : '上傳到 Dropbox';
   if (!record.photo || ui.currentPhoto === record.photo) return;
+  ui.uploadStatus.textContent = GAME.uploadEndpoint ? '' : 'Dropbox 收相頁需要另行選相及提交。';
 
   if (ui.photoUrl) URL.revokeObjectURL(ui.photoUrl);
   ui.currentPhoto = record.photo;
+  ui.uploadId = record.uploadId;
   ui.photoUrl = URL.createObjectURL(record.photo);
   ui.preview.src = ui.photoUrl;
   ui.preview.hidden = false;
@@ -220,9 +231,17 @@ async function save(id, changes) {
   if (ui.check.disabled) return;
   for (const button of [ui.check, ui.camera, ui.pick]) button.disabled = true;
   const next = {...records.get(id), ...changes};
+  ui.upload.disabled = true;
   const savingMessage = ui.status.textContent;
   try {
-    if (database) await storage('readwrite', store => store.put(next, key(id)));
+    if (database) {
+      try {
+        await storage('readwrite', store => store.put(next, key(id)));
+      } catch (error) {
+        if (!changes.photo && !changes.uploaded) throw error;
+        byId('storage-status').textContent = '暫時未能保留最新紀錄。請在關閉頁面前上傳相片。';
+      }
+    }
     records.set(id, next);
     renderCard(id);
     updateProgress();
@@ -234,6 +253,7 @@ async function save(id, changes) {
     ui.status.textContent = '未能儲存，請確認瀏覽器有足夠空間後重試。';
   } finally {
     for (const button of [ui.check, ui.camera, ui.pick]) button.disabled = false;
+    renderCard(id);
   }
 }
 
@@ -246,7 +266,59 @@ function attachPhoto(id, input) {
     cards.get(id).status.textContent = '請選擇圖片檔案。';
     return;
   }
-  save(id, {photo:file, fileName:file.name, takenAt:Date.now()});
+  save(id, {photo:file, fileName:file.name, takenAt:Date.now(), uploadId:crypto.randomUUID?.() || null, uploaded:false});
+}
+
+async function uploadPhoto(id) {
+  const ui = cards.get(id);
+  const record = records.get(id);
+  if (!record.photo || ui.uploading || ui.check.disabled) return;
+  if (!GAME.uploadEndpoint) {
+    window.open(GAME.dropboxRequest, '_blank', 'noopener,noreferrer');
+    return;
+  }
+  if (record.uploaded) return;
+  if (record.photo.size > 15 * 1024 * 1024) {
+    ui.uploadStatus.textContent = '相片超過 15 MB，請改用較細的相片。';
+    return;
+  }
+
+  ui.uploading = true;
+  ui.upload.disabled = true;
+  ui.check.disabled = true;
+  ui.camera.disabled = true;
+  ui.pick.disabled = true;
+  ui.uploadStatus.textContent = '正在上傳到 Dropbox…';
+  try {
+    // 舊版本的相片也可上傳。保留同一個識別碼，避免重試時建立重複相片。
+    ui.uploadId ||= record.uploadId || crypto.randomUUID();
+    const url = new URL(GAME.uploadEndpoint);
+    url.searchParams.set('target', id);
+    url.searchParams.set('id', ui.uploadId);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/octet-stream'},
+      body: record.photo,
+      signal: AbortSignal.timeout(60000)
+    });
+    const result = await response.json();
+    if (!response.ok || result.ok !== true) {
+      ui.uploadStatus.textContent = response.status === 415 ?
+        '請選擇 JPEG、PNG、WebP 或 HEIC 相片。' : '未能上傳，請稍後再試。';
+      return;
+    }
+    ui.check.disabled = false;
+    await save(id, {uploaded:true, uploadId:ui.uploadId});
+    ui.uploadStatus.textContent = '已上傳到 Dropbox T1。';
+  } catch {
+    ui.uploadStatus.textContent = '未能確認上傳結果，請檢查網絡後重試。';
+  } finally {
+    ui.uploading = false;
+    ui.check.disabled = false;
+    ui.camera.disabled = false;
+    ui.pick.disabled = false;
+    renderCard(id);
+  }
 }
 
 function makeCard(target, index) {
@@ -255,6 +327,8 @@ function makeCard(target, index) {
   for (const name of ['toggle','check','camera','panel','preview','download','status','pick','capture','album']) {
     ui[name] = card.querySelector('.' + name);
   }
+  ui.upload = card.querySelector('.upload');
+  ui.uploadStatus = card.querySelector('.upload-status');
   cards.set(target.id, ui);
   card.querySelector('.number').textContent = String(index + 1).padStart(2, '0');
   card.querySelector('.row-title').textContent = ui.title;
@@ -281,6 +355,7 @@ function makeCard(target, index) {
   ui.check.addEventListener('click', () => save(target.id, {done:!records.get(target.id).done}));
   ui.camera.addEventListener('click', () => ui.capture.click());
   ui.pick.addEventListener('click', () => ui.album.click());
+  ui.upload.addEventListener('click', () => uploadPhoto(target.id));
   for (const input of [ui.capture, ui.album]) input.addEventListener('change', () => attachPhoto(target.id, input));
 
   byId('targets').append(card);
@@ -288,6 +363,9 @@ function makeCard(target, index) {
 }
 
 async function init() {
+  const requestLink = byId('dropbox-request');
+  requestLink.href = GAME.dropboxRequest;
+  requestLink.hidden = false;
   byId('team').textContent = GAME.teamName;
   document.title = GAME.teamName + '｜成人牧區野外定向';
   progress.max = GAME.targets.length;
