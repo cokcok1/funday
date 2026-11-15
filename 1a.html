@@ -31,11 +31,10 @@ progress::-moz-progress-bar{background:var(--green);border-radius:10px}
 .guide{margin:15px 2px 12px;color:var(--muted);font-size:.83rem;line-height:1.6}
 .section-head{display:flex;justify-content:space-between;align-items:center;margin:0 2px 8px;gap:8px}
 h2{margin:0;font-size:1.12rem}
-.photo-count{font-size:.75rem;color:var(--muted);font-weight:650}
 .list{display:grid;gap:8px}
 .card{min-width:0;border:1px solid var(--line);border-radius:15px;background:var(--white);box-shadow:0 2px 5px #14382b08}
 .card.done{border-color:#a9d4b7}
-.row{display:grid;grid-template-columns:minmax(0,1fr) 48px 52px;align-items:center;gap:6px;padding:6px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 54px;align-items:center;gap:6px;padding:6px}
 .row button{border:0;border-radius:10px;min-height:49px;background:transparent}
 .row .toggle{display:flex;align-items:center;gap:9px;padding:4px 5px;text-align:left;width:100%;font-weight:750}
 .number{display:grid;place-items:center;min-width:34px;height:34px;border-radius:9px;background:var(--mint);color:var(--green);font-size:.8rem;font-weight:850;font-variant-numeric:tabular-nums}
@@ -44,28 +43,20 @@ h2{margin:0;font-size:1.12rem}
 .toggle[aria-expanded=true] .chevron{transform:rotate(180deg)}
 .row .action{display:grid;justify-items:center;align-content:center;gap:2px;padding:3px 1px;background:#f1f5f1;color:#36594a;font-size:.64rem;font-weight:730;white-space:nowrap}
 .row .action .icon{width:19px;height:19px}
-.row .camera{background:#e6f3ee;color:#155e47}
-.row .action[aria-pressed=true],.row .camera.has-photo{background:var(--green);color:#fff}
+.row .action[aria-pressed=true]{background:var(--green);color:#fff}
 .panel{border-top:1px solid var(--line);margin:0 11px;padding:12px 2px 13px;font-size:.94rem;line-height:1.72;overflow-wrap:anywhere}
 .panel p{margin:0 0 8px}
-.panel .note{background:#fff3d5;color:#624713;padding:8px 10px;border-radius:9px;font-size:.83rem}
-.panel .task{color:var(--green);font-weight:700;font-size:.85rem}
-.preview{display:block;width:100%;max-height:310px;object-fit:contain;background:#eaf1ec;border-radius:10px;margin:9px 0 7px}
-.photo-tools{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
-.photo-tools button,.photo-tools a{display:inline-flex;align-items:center;min-height:44px;padding:5px 10px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--green);font-size:.8rem;font-weight:700;text-decoration:none}
-.photo-tools .upload{background:var(--green);color:white;border-color:var(--green)}
 .rules summary{display:flex;align-items:center;justify-content:space-between;min-height:54px;padding:10px 14px;gap:8px;cursor:pointer;list-style:none;font-weight:750}
 .rules summary::-webkit-details-marker{display:none}
 .rules summary:focus-visible{outline:3px solid #137a61;outline-offset:2px;border-radius:12px}
 .rules[open] summary .chevron{transform:rotate(180deg)}
-.rules ol,.panel ul{margin:6px 0 9px;padding-inline-start:1.5em}
-.rules li+li{margin-top:6px}
-.rules a{color:var(--green);font-weight:700}
+.panel ol,.panel ul{margin:6px 0 9px;padding-inline-start:1.5em}
+.panel li+li{margin-top:6px}
+.panel a{color:var(--green);font-weight:700}
+.panel .dropbox-link{display:inline-flex;align-items:center;min-height:44px;margin-top:4px;padding:6px 12px;border-radius:9px;background:var(--green);color:white;text-decoration:none}
 .status{margin:0;color:var(--muted);font-size:.8rem}
 .banner{margin:12px 0 0;background:#e4f3e8;border:1px solid #b4dbc1;border-radius:12px;padding:11px 12px;font-weight:700;font-size:.9rem}
-footer{margin:15px 2px 0;color:var(--muted);font-size:.75rem;line-height:1.65}
-footer p{margin:4px 0}
-@media(min-width:450px){.row{grid-template-columns:minmax(0,1fr) 58px 62px;gap:8px}.hero{padding-inline:21px}.panel{padding-inline:7px}}
+@media(min-width:450px){.row{grid-template-columns:minmax(0,1fr) 62px;gap:8px}.hero{padding-inline:21px}.panel{padding-inline:7px}}
 </style>
 </head>
 <body>
@@ -73,7 +64,6 @@ footer p{margin:4px 0}
   <symbol id="compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.7 8.3-2 5.4-5.4 2 2-5.4z"/></symbol>
   <symbol id="chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
   <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
-  <symbol id="camera" viewBox="0 0 24 24"><path d="M4 6.5h3.8L9.4 4h5.2l1.6 2.5H20a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="3.4"/></symbol>
 </svg>
 <main class="shell">
   <header>
@@ -90,20 +80,21 @@ footer p{margin:4px 0}
       <div class="progress"><span>探索進度</span><progress id="progress" value="0" aria-label="探索進度"></progress><span id="progress-count" role="status"></span></div>
     </div>
   </header>
-  <p class="guide">點目標展開線索。到達後可拍照打卡，再按剔號標記完成。</p>
+  <p id="storage-status" class="status" role="status"></p>
+  <p class="guide">點目標展開線索。用手機相機影相打卡，完成後撳剔號。</p>
   <section aria-labelledby="section-title">
-    <div class="section-head"><h2 id="section-title">探索目標</h2><span id="photo-count" class="photo-count"></span></div>
+    <div class="section-head"><h2 id="section-title">探索目標</h2></div>
     <div class="list">
       <details class="card rules">
         <summary>遊戲解說 <svg class="icon chevron" aria-hidden="true"><use href="#chevron"/></svg></summary>
         <div class="panel">
           <p>同隊友一齊睇線索，完成卡加利市中心嘅 <strong data-total></strong> 個目標！</p>
           <ol>
-            <li><strong>睇線索</strong>｜打開隊伍嘅遊戲網頁，撳開各個目標，睇線索同打卡要求。</li>
-            <li><strong>搵地點</strong>｜先完成目標一嘅出發準備。其餘目標可以自由排序，同隊友一齊估地點，搵出最短路線。</li>
-            <li><strong>影相打卡</strong>｜到達後，撳目標旁邊嘅相機掣，按打卡要求影一張相。</li>
-            <li><strong>標記完成</strong>｜影完相就撳剔號。全部目標都標記完成後，進度會顯示 <strong id="rules-progress"></strong>。</li>
-            <li><strong>交相</strong>｜由一位隊員開啟 Dropbox 收相頁，選取並上載打卡相。可以先用手機相機 App 影相，再喺遊戲撳「從相簿選擇」，咁交相時就可以直接由相簿揀返。</li>
+            <li><strong>睇線索</strong>｜打開隊伍嘅遊戲網頁，撳開各個目標，睇線索。</li>
+            <li><strong>搵地點</strong>｜先完成目標一嘅出發準備。目標二至六可以自由排序，同隊友一齊估地點，搵出最短路線。</li>
+            <li><strong>影相打卡</strong>｜到達後，用手機嘅「相機」App 影一張打卡相。遇到施工圍欄，請留喺開放嘅行人路。</li>
+            <li><strong>標記完成</strong>｜影完相就撳剔號。連同最後嘅交相步驟都標記完成後，進度會顯示 <strong id="rules-progress"></strong>。</li>
+            <li><strong>交相</strong>｜由一位隊員跟「目標 7－上傳相片」嘅步驟，一次過提交全組嘅打卡相。</li>
             <li><strong>交通安排</strong>
               <ul>
                 <li>C-Train</li>
@@ -116,27 +107,18 @@ footer p{margin:4px 0}
       </details>
       <div id="targets" class="list"></div>
     </div>
-    <p id="finished" class="banner" hidden>全部目標已完成！可向活動負責人展示進度同打卡相片。</p>
+    <p id="finished" class="banner" hidden>全部目標已完成！</p>
   </section>
-  <footer><p>進度與打卡相片會保留喺此瀏覽器。請提交相片到 Dropbox 完成交相。</p><p><a id="dropbox-request" target="_blank" rel="noopener noreferrer" hidden>開啟 Dropbox T1 收相頁</a></p><p id="storage-status" role="status"></p></footer>
 </main>
 <template id="card">
   <article class="card">
     <div class="row">
       <button class="toggle" type="button" aria-expanded="false"><span class="number" aria-hidden="true"></span><span class="row-title"></span><svg class="icon chevron" aria-hidden="true"><use href="#chevron"/></svg></button>
       <button class="action check" type="button" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#check"/></svg><span>完成</span></button>
-      <button class="action camera" type="button"><svg class="icon" aria-hidden="true"><use href="#camera"/></svg><span>相機</span></button>
     </div>
-    <input class="capture" type="file" accept="image/*" capture="environment" hidden>
-    <input class="album" type="file" accept="image/*" hidden>
     <div class="panel" hidden>
       <div class="clue"></div>
-      <p class="note" hidden></p>
-      <p class="task"></p>
-      <img class="preview" alt="" hidden>
-      <p class="status" role="status"></p>
       <p class="upload-status status" role="status"></p>
-      <div class="photo-tools"><button class="upload" type="button" hidden>上傳到 Dropbox</button><button class="pick" type="button">從相簿選擇</button><button class="share" type="button" hidden>分享／儲存相片</button><a class="download" hidden>下載到「檔案」</a></div>
     </div>
   </article>
 </template>
@@ -144,46 +126,48 @@ footer p{margin:4px 0}
 'use strict';
 
 // 複製給其他隊伍時，只需改這段。teamId 每隊不同；陣列排列就是顯示次序。
-// 保留每個地點的 id，日後調換同一隊的次序時，原有相片及進度仍會對應正確。
+// 保留每個地點的 id，日後調換同一隊的次序時，原有進度仍會對應正確。
 const GAME = {
   teamName: 'TEAM 1',
   teamId: 'team-1',
   dropboxRequest: 'https://www.dropbox.com/request/i71zxf2l6nb0kwo8plc8',
-  // 部署 Worker 後填入完整 HTTPS /upload 網址。
-  uploadEndpoint: '',
   targets: [
     {
       id: 'team-preparation',
       title: '出發準備',
-      clue: ['出發前，必須揀選以下三位組員：'],
-      roles: ['Team Leader（隊長）', '領航員｜負責睇地圖', '攝影師｜負責攝影'],
-      task: '出發前全組組員一齊合照。'
+      clue: ['出發前，請分配以下三個角色，以及完成以下準備。'],
+      preparation: ['Team Leader（隊長）', '領航員｜負責睇地圖', '攝影師｜負責攝影', '出發前全組組員一齊合照']
     },
     {
       id: 'canton-block',
       clue: ['走進 Centre Street，尋找一座於 1910 至 1911 年興建、名為 Canton Block 的百年紅磚樓。早期華商在這裏購地興建大樓，為今日卡加利唐人街奠下基礎。'],
-      task: '在行人路拍下大樓的紅磚外牆。'
     },
     {
       id: 'olympic-plaza',
       clue: ['找出 1988 年卡加利冬季奧運會的頒獎廣場。當年，市民可認購刻上自己名字的紀念磚，成為廣場步道的一部分。', '時任市長拉爾夫·克萊恩（Ralph Klein）希望市民也能親身觀看頒獎，因此推動在市中心廣場舉行頒獎典禮。'],
-      note: '廣場現正施工。可在附近開放的公共行人路打卡，請留在圍欄外。',
-      task: '在開放的行人路拍下廣場外圍或附近的街道路牌。'
     },
     {
       id: 'central-library',
       clue: ['找出這座由 Snøhetta 與 DIALOG 合作設計的建築。外形如舟艇，有木質拱形入口和幾何玻璃外牆，曾獲 TIME 雜誌選為 2019 年全球最佳景點之一。'],
-      task: '在外面拍下木質拱形入口或幾何玻璃外牆。'
     },
     {
       id: 'studio-bell',
       clue: ['哪一座建築由 9 座覆蓋陶瓷瓦片的弧形塔樓互相連接？設計靈感來自樂器的聲學結構，內部收藏大量加拿大音樂歷史珍品。'],
-      task: '在街上拍下弧形塔樓或陶瓷外牆。'
     },
     {
       id: 'husky-tower',
       clue: ['尋找一座於 1968 年落成、原名 Husky Tower 的觀景塔。1988 年卡加利冬奧期間，塔頂曾燃點官方奧運聖火。'],
-      task: '在公共行人路拍一張見到塔頂的相片。'
+    },
+    {
+      id: 'submit-photos',
+      title: '上傳相片',
+      submission: [
+        '由攝影師或一位隊員準備好六張相，包括出發前嘅全組合照同五張打卡相。',
+        '撳下面「開啟 Dropbox T1 收相頁」，再撳「新增檔案」（Add files）。',
+        '喺「相片圖庫」或「相簿」揀相。如果相片之前下載咗，可以喺「檔案」揀返。',
+        '確認相片齊全。如畫面要求，填寫姓名同電郵，再撳「上傳」（Upload）。',
+        '等 Dropbox 顯示上傳成功，返到遊戲撳目標 7 旁邊嘅剔號。'
+      ]
     }
   ]
 };
@@ -218,10 +202,8 @@ const key = id => GAME.teamId + '/' + id;
 function updateProgress() {
   const values = [...records.values()];
   const completed = values.filter(record => record.done).length;
-  const photos = values.filter(record => record.photo).length;
   progress.value = completed;
   byId('progress-count').textContent = completed + ' / ' + GAME.targets.length;
-  byId('photo-count').textContent = '已拍照 ' + photos + ' / ' + GAME.targets.length;
   byId('finished').hidden = completed !== GAME.targets.length;
 }
 
@@ -239,201 +221,71 @@ function renderCard(id) {
   ui.card.classList.toggle('done', !!record.done);
   ui.check.setAttribute('aria-pressed', String(!!record.done));
   ui.check.querySelector('span').textContent = record.done ? '已完成' : '完成';
-  ui.camera.classList.toggle('has-photo', !!record.photo);
-  ui.camera.querySelector('span').textContent = record.photo ? '重拍' : '相機';
-  ui.camera.setAttribute('aria-label', ui.title + (record.photo ? '重拍相片' : '相機打卡'));
-  ui.upload.hidden = !record.photo;
-  ui.upload.disabled = ui.uploading || !!(GAME.uploadEndpoint && record.uploaded);
-  ui.upload.textContent = !GAME.uploadEndpoint ? '開啟 Dropbox 收相頁' :
-    record.uploaded ? '已上傳到 Dropbox' : '上傳到 Dropbox';
-  if (!record.photo || ui.currentPhoto === record.photo) return;
-  ui.uploadStatus.textContent = GAME.uploadEndpoint ? '' : 'Dropbox 收相頁要再揀相。若相片只喺遊戲內，可用下方按鈕儲存。';
-
-  if (ui.photoUrl) URL.revokeObjectURL(ui.photoUrl);
-  ui.currentPhoto = record.photo;
-  ui.uploadId = record.uploadId;
-  ui.photoUrl = URL.createObjectURL(record.photo);
-  ui.preview.src = ui.photoUrl;
-  ui.preview.hidden = false;
-  ui.download.href = ui.photoUrl;
-  const extension = (record.fileName || '').match(/\.[a-z0-9]{2,8}$/i)?.[0] || '';
-  ui.download.download = GAME.teamId + '-' + id + extension;
-  ui.download.hidden = false;
-  ui.share.hidden = true;
-  if (navigator.share && navigator.canShare) {
-    const file = new File([record.photo], ui.download.download, {type:record.photo.type});
-    if (navigator.canShare({files:[file]})) {
-      ui.share.hidden = false;
-      ui.share.onclick = async () => {
-        try {
-          await navigator.share({files:[file]});
-        } catch (error) {
-          if (error.name !== 'AbortError') {
-            ui.uploadStatus.textContent = '未能開啟分享選單，可以用「下載到檔案」。';
-          }
-        }
-      };
-    }
-  }
-  ui.status.textContent = '已打卡 · ' + new Date(record.takenAt).toLocaleString('zh-HK');
 }
 
-async function save(id, changes) {
+async function saveCompletion(id) {
   const ui = cards.get(id);
   if (ui.check.disabled) return;
-  for (const button of [ui.check, ui.camera, ui.pick]) button.disabled = true;
-  const next = {...records.get(id), ...changes};
-  ui.upload.disabled = true;
-  const savingMessage = ui.status.textContent;
+  ui.check.disabled = true;
+  const next = {...records.get(id), done:!records.get(id).done};
   try {
-    if (database) {
-      try {
-        await storage('readwrite', store => store.put(next, key(id)));
-      } catch (error) {
-        if (!changes.photo && !changes.uploaded) throw error;
-        byId('storage-status').textContent = '暫時未能保留最新紀錄。請在關閉頁面前上傳相片。';
-      }
-    }
+    if (database) await storage('readwrite', store => store.put(next, key(id)));
     records.set(id, next);
     renderCard(id);
     updateProgress();
-    if (!changes.photo && ui.status.textContent === savingMessage && savingMessage.includes('未能儲存')) {
-      ui.status.textContent = '';
-    }
-  } catch (error) {
-    expand(id);
-    ui.status.textContent = '未能儲存，請確認瀏覽器有足夠空間後重試。';
-  } finally {
-    for (const button of [ui.check, ui.camera, ui.pick]) button.disabled = false;
-    renderCard(id);
-  }
-}
-
-function attachPhoto(id, input) {
-  const file = input.files[0];
-  input.value = '';
-  if (!file) return;
-  expand(id);
-  if (!file.type.startsWith('image/') && !/\.(heic|heif|avif|jpe?g|png|webp|gif)$/i.test(file.name)) {
-    cards.get(id).status.textContent = '請選擇圖片檔案。';
-    return;
-  }
-  save(id, {photo:file, fileName:file.name, takenAt:Date.now(), uploadId:crypto.randomUUID?.() || null, uploaded:false});
-}
-
-async function uploadPhoto(id) {
-  const ui = cards.get(id);
-  const record = records.get(id);
-  if (!record.photo || ui.uploading || ui.check.disabled) return;
-  if (!GAME.uploadEndpoint) {
-    window.open(GAME.dropboxRequest, '_blank', 'noopener,noreferrer');
-    return;
-  }
-  if (record.uploaded) return;
-  if (record.photo.size > 15 * 1024 * 1024) {
-    ui.uploadStatus.textContent = '相片超過 15 MB，請改用較細的相片。';
-    return;
-  }
-
-  ui.uploading = true;
-  ui.upload.disabled = true;
-  ui.check.disabled = true;
-  ui.camera.disabled = true;
-  ui.pick.disabled = true;
-  ui.uploadStatus.textContent = '正在上傳到 Dropbox…';
-  try {
-    // 舊版本的相片也可上傳。保留同一個識別碼，避免重試時建立重複相片。
-    ui.uploadId ||= record.uploadId || crypto.randomUUID();
-    const url = new URL(GAME.uploadEndpoint);
-    url.searchParams.set('target', id);
-    url.searchParams.set('id', ui.uploadId);
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/octet-stream'},
-      body: record.photo,
-      signal: AbortSignal.timeout(60000)
-    });
-    const result = await response.json();
-    if (!response.ok || result.ok !== true) {
-      ui.uploadStatus.textContent = response.status === 415 ?
-        '請選擇 JPEG、PNG、WebP 或 HEIC 相片。' : '未能上傳，請稍後再試。';
-      return;
-    }
-    ui.check.disabled = false;
-    await save(id, {uploaded:true, uploadId:ui.uploadId});
-    ui.uploadStatus.textContent = '已上傳到 Dropbox T1。';
   } catch {
-    ui.uploadStatus.textContent = '未能確認上傳結果，請檢查網絡後重試。';
+    byId('storage-status').textContent = '未能儲存進度，請再試一次。';
   } finally {
-    ui.uploading = false;
     ui.check.disabled = false;
-    ui.camera.disabled = false;
-    ui.pick.disabled = false;
-    renderCard(id);
   }
 }
 
 function makeCard(target, index) {
   const card = byId('card').content.firstElementChild.cloneNode(true);
   const title = '目標 ' + (index + 1);
-  const ui = {card, title};
-  for (const name of ['toggle','check','camera','panel','preview','download','share','status','pick','capture','album']) {
+  const ui = {card};
+  for (const name of ['toggle', 'check', 'panel']) {
     ui[name] = card.querySelector('.' + name);
   }
-  ui.upload = card.querySelector('.upload');
-  ui.uploadStatus = card.querySelector('.upload-status');
   cards.set(target.id, ui);
   card.querySelector('.number').textContent = String(index + 1).padStart(2, '0');
-  card.querySelector('.row-title').textContent = target.title ? title + ' · ' + target.title : title;
+  card.querySelector('.row-title').textContent = target.title ? title + '－' + target.title : title;
   ui.panel.id = 'clue-' + target.id;
   ui.toggle.setAttribute('aria-controls', ui.panel.id);
-  ui.check.setAttribute('aria-label', ui.title + '完成');
-  ui.preview.alt = ui.title + '打卡相片';
-  ui.preview.addEventListener('error', () => {
-    ui.status.textContent = '此瀏覽器未能預覽相片格式，仍可下載原檔。';
-  });
+  ui.check.setAttribute('aria-label', title + '完成');
 
-  for (const line of target.clue) {
+  for (const line of target.clue ?? []) {
     const paragraph = document.createElement('p');
     paragraph.textContent = line;
     card.querySelector('.clue').append(paragraph);
   }
-  if (target.roles) {
-    const list = document.createElement('ul');
-    for (const role of target.roles) {
+  const steps = target.preparation ?? target.submission;
+  if (steps) {
+    const list = document.createElement(target.submission ? 'ol' : 'ul');
+    for (const step of steps) {
       const item = document.createElement('li');
-      item.textContent = role;
+      item.textContent = step;
       list.append(item);
     }
     card.querySelector('.clue').append(list);
   }
-  if (target.note) {
-    const note = card.querySelector('.note');
-    note.textContent = target.note;
-    note.hidden = false;
+  if (target.submission) {
+    const link = document.createElement('a');
+    link.className = 'dropbox-link';
+    link.href = GAME.dropboxRequest;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = '開啟 Dropbox T1 收相頁';
+    card.querySelector('.clue').append(link);
   }
-  card.querySelector('.task').textContent = '打卡方式　' + target.task;
   ui.toggle.addEventListener('click', () => expand(ui.panel.hidden ? target.id : null));
-  ui.check.addEventListener('click', () => save(target.id, {done:!records.get(target.id).done}));
-  ui.camera.addEventListener('click', () => ui.capture.click());
-  ui.pick.addEventListener('click', () => ui.album.click());
-  ui.upload.addEventListener('click', () => uploadPhoto(target.id));
-  for (const input of [ui.capture, ui.album]) input.addEventListener('change', () => attachPhoto(target.id, input));
+  ui.check.addEventListener('click', () => saveCompletion(target.id));
 
   byId('targets').append(card);
   renderCard(target.id);
 }
 
 async function init() {
-  const requestLink = byId('dropbox-request');
-  requestLink.href = GAME.dropboxRequest;
-  requestLink.hidden = false;
-  if (GAME.uploadEndpoint) {
-    document.querySelector('.rules li:nth-child(5)').replaceChildren(
-      Object.assign(document.createElement('strong'), {textContent:'交相'}),
-      '｜每站影完相後，撳「上傳到 Dropbox」，等畫面顯示已上傳。'
-    );
-  }
   byId('team').textContent = GAME.teamName;
   document.title = GAME.teamName + '｜成人牧區野外定向';
   progress.max = GAME.targets.length;
@@ -446,7 +298,7 @@ async function init() {
   } catch (error) {
     database?.close();
     database = undefined;
-    byId('storage-status').textContent = '瀏覽器暫未能儲存資料。關閉或重新整理頁面前，請先下載打卡相片。';
+    byId('storage-status').textContent = '瀏覽器暫未能儲存進度。重新整理後可能要再勾選。';
   }
   GAME.targets.forEach((target, index) => {
     if (!records.has(target.id)) records.set(target.id, {});
